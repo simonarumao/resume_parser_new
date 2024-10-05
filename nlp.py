@@ -19,14 +19,22 @@ def generate_pdf(resume_content):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
+    
+    # Adding the resume content line by line
     for line in resume_content.split('\n'):
         pdf.cell(200, 10, txt=line, ln=True, align='L')
     
+    # Write PDF content to BytesIO object
     pdf_output = io.BytesIO()
-    pdf.output(pdf_output)
+    
+    # Output PDF to the BytesIO object (using dest='S' for stream)
+    pdf_output.write(pdf.output(dest='S').encode('latin1'))
+    
+    # Move the file pointer to the beginning of the BytesIO object
     pdf_output.seek(0)
     
     return pdf_output
+
 
 def download_pdf(pdf_output, file_name):
     b64 = base64.b64encode(pdf_output.read()).decode('utf-8')
