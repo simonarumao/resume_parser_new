@@ -5,6 +5,7 @@ import base64
 import io
 import pdf2image
 from PIL import Image
+from PyPDF2 import PdfReader
 
 # Configure the Gemini API
 genai.configure(api_key="AIzaSyAmLhiM2swlMBGsGE154l6Y1WiDnTMLuCs")
@@ -60,7 +61,7 @@ def input_pdf_setup(uploaded_file):
 st.set_page_config(page_title="AI-Powered Resume Tool")
 
 # Sidebar for navigation
-option = st.sidebar.selectbox("Choose an option:", ("Resume Maker", "Resume Analyzer","Cover Letter Generator","Interview Prep"))
+option = st.sidebar.selectbox("Choose an option:", ("Resume Maker", "Resume Analyzer","Cover Letter Generator","Interview Prep","Resume Q&A"))
 
 # Resume Maker
 if option == "Resume Maker":
@@ -219,6 +220,47 @@ elif option == "Interview Prep":
         else:
             st.error("Please upload a resume.")
 
-    
 
+elif option == "Resume Q&A":
+    st.header("Resume Q&A")
+
+    def get_gemini_response(resume_text, user_prompt):
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content([resume_text, user_prompt])
+        return response.text
     
+    def extract_pdf_text(uploaded_file):
+            reader = PdfReader(uploaded_file)
+            resume_text = ""
+            for page in reader.pages:
+                resume_text += page.extract_text()
+            return resume_text
+
+
+    # Resume Upload
+    uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=["pdf"])
+
+    if uploaded_file:
+        st.write("PDF Uploaded Successfully")
+        resume_text = extract_pdf_text(uploaded_file)
+        
+        # Text Area for user to input questions
+        user_prompt = st.text_area("Ask something about your resume:", key="user_prompt")
+
+        # Button to send request to Gemini
+        if st.button("Submit Query"):
+            if user_prompt:
+                response = get_gemini_response(resume_text, user_prompt)
+                st.subheader("Gemini's Response:")
+                st.write(response)
+            else:
+                st.warning("Please enter a prompt/question.")
+    else:
+        st.warning("Please upload your resume.")
+
+
+
+
+        
+
+        
